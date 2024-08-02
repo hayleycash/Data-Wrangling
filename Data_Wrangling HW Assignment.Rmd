@@ -20,17 +20,13 @@ randomdata <- data.frame(
   'Age' = trunc(runif(n, min = 18, max = 36)),  # Age uniformly distributed between 18 and 35
   'InfantSex' = factor(rbinom(n, size = 1, prob = 0.5), labels = c("Male", "Female"))  # Infant sex with 50% probability
 )
-
 # Generate Glucose1 and Glucose2 based on InfantSex
 randomdata$Glucose1 <- ifelse(randomdata$InfantSex == "Male",
                         rnorm(n, mean = 85, sd = 6), #normalized distribution
                         rnorm(n, mean = 80, sd = 6))
-
 randomdata$Glucose2 <- ifelse(randomdata$InfantSex == "Male",
                         rnorm(n, mean = 165, sd = 9),
                         rnorm(n, mean = 155, sd = 9))
-
-# Define Diagnosis based on Glucose1 and Glucose2
 randomdata$Diagnosis <- ifelse(randomdata$Glucose1 > 95 | randomdata$Glucose2 > 180, #define diagnosis
                           "Gestational Diabetes", "Healthy")
 ```
@@ -39,15 +35,13 @@ randomdata$Diagnosis <- ifelse(randomdata$Glucose1 > 95 | randomdata$Glucose2 > 
 # Subset the data for male infants
 # Subset using https://www.statmethods.net/management/subset.html
 male_data <- subset(randomdata, InfantSex == "Male")
-
 # Subset the data for female infants
 female_data <- subset(randomdata, InfantSex == "Female")
 
-# Print summary for male infants
+#Male infants
 print("Summary for Male Infants")
 summary(male_data)
-
-# Print summary for female infants
+#Female Infants
 print("Summary for Female Infants")
 summary(female_data)
 ```
@@ -61,7 +55,7 @@ ggplot(randomdata, aes(x = Diagnosis, y = Glucose1, fill = InfantSex)) +
        x = "Diagnosis",
        y = "Fasting Glucose (Glucose1)",
        fill = "Infant Sex") +
-  theme_gray() +
+  theme_gray() + #adds gray background
   theme(
     plot.title = element_text(hjust = 0.5),
     axis.text = element_text(face = "bold"))
@@ -94,7 +88,7 @@ ggplot(longData, aes(x = Timepoint, y = Glucose, fill = Diagnosis)) +
     y = "Glucose (mg/dL)", 
     fill = "GDM Diagnosis",
     title = "Glucose Distribution at Baseline and After One Hour") +
-  theme_light() +
+  theme_light() + #light theme
   theme(
     plot.title = element_text(hjust = 0.5),
     axis.text = element_text(face = "bold"))
@@ -115,7 +109,7 @@ color_plot <- c("Baseline" = "orange", "One Hour" = "purple")
 calc_stats <- function(data) {
   data %>%
     group_by(Timepoint) %>% #find groups of interest
-    summarise(
+    summarise( #https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/summarise
       Mean = mean(Glucose),
       SD = sd(Glucose)
     )
@@ -176,8 +170,8 @@ male_plot <- ggplot(subset(longData, InfantSex == "Male"), aes(x = Age, y = Gluc
     axis.text = element_text(face = "bold")
   ) +
   geom_text(data = male_stats %>% filter(Timepoint == "Baseline"), 
-            aes(x = position_Baseline_male[1], y = position_Baseline_male[2], 
-                label = sprintf("Baseline: Mean = %.1f (SD = %.1f)", Mean, SD)), 
+            aes(x = position_Baseline_male[1], y = position_Baseline_male[2], #defining so the movement can be done
+                label = sprintf("Baseline: Mean = %.1f (SD = %.1f)", Mean, SD)), #label is what text you want to display
             color = color_plot["Baseline"],
             size = 3) +
   geom_text(data = male_stats %>% filter(Timepoint == "One Hour"), 
@@ -206,7 +200,7 @@ ggarrange(female_plot, male_plot,
 ```{r}
 table_wide <- randomdata %>%
   group_by(InfantSex, Diagnosis) %>% #Healthy Female/Gestational Diabetes Female
-  summarise( #calculations
+  summarise( #calculations for material i want included in the table
     Mean_Age = mean(Age),
     Mean_Fasting_Glucose = mean(Glucose1),
     SD_Fasting_Glucose = sd(Glucose1),
@@ -215,16 +209,14 @@ table_wide <- randomdata %>%
   ) %>%
   # Combine Diagnosis and Infant sex
   mutate(Group = paste(Diagnosis, InfantSex)) %>%
-  # Ensure the rows are in the required order
-  
-#https://www.rdocumentation.org/packages/dplyr/versions/1.0.10/topics/arrange
+  # Ensure the rows are in the required order https://www.rdocumentation.org/packages/dplyr/versions/1.0.10/topics/arrange
   arrange(factor(Group, levels = c( 
     "Healthy Female",
     "Gestational Diabetes Female",
     "Healthy Male",
     "Gestational Diabetes Male"
   ))) %>%
-  # Select and rename columns for clarity
+  # Selecting the columns I want included in the table
   select(
     Group,
     Mean_Age,
